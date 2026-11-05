@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Workouts</title>
+
+<style>
+:root {
+  --bg: #10141d;
+  --card: #1c2330;
+  --accent: #a3e635;
+  --text: #f4f6fa;
+  --muted: #9ca8ba;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  padding: 24px 18px 12px;
+}
+header h1 {
+  margin: 0;
+  font-size: 30px;
+}
+header p { color: var(--muted); margin: 8px 0; }
+main { max-width: 650px; margin: auto; padding: 12px; }
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin: 10px 0 20px;
+}
+.tab {
+  border: 1px solid #343d4d;
+  background: var(--card);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 4px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.tab.active {
+  background: var(--accent);
+  color: #17200b;
+  border-color: var(--accent);
+}
+h2 { font-size: 21px; margin: 12px 0; }
+.exercise {
+  background: var(--card);
+  border: 1px solid #2b3443;
+  border-radius: 16px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+.exercise h3 { margin: 0 0 6px; font-size: 17px; }
+.exercise p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+input {
+  width: 100%;
+  min-width: 0;
+  background: #111722;
+  color: white;
+  border: 1px solid #3a4556;
+  border-radius: 9px;
+  padding: 10px 7px;
+  font-size: 16px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+button, a.action {
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-weight: bold;
+  font-size: 13px;
+  text-decoration: none;
+}
+.demo {
+  background: #303b4d;
+  color: white;
+}
+.done {
+  background: var(--accent);
+  color: #17200b;
+  flex: 1;
+}
+.done.checked {
+  background: #35432b;
+  color: var(--accent);
+}
+.timer {
+  background: #1c2330;
+  border: 1px solid #2b3443;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+#clock {
+  font-size: 42px;
+  font-weight: bold;
+  margin: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.timer-controls button {
+  background: #303b4d;
+  color: white;
+}
+.timer-controls button.primary {
+  background: var(--accent);
+  color: #17200b;
+}
+#progress {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 12px 0;
+}
+footer {
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  padding: 20px;
+}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Workouts <span style="color:#a3e635">💪</span></h1>
+  <p>Your training. Your progress.</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" data-day="push">Push</button>
+    <button class="tab" data-day="pull">Pull</button>
+    <button class="tab" data-day="kettlebell">Kettle</button>
+    <button class="tab" data-day="core">Core & Abs</button>
+  </div>
+
+  <section class="timer">
+    <div style="color:#9ca8ba;font-size:13px">REST TIMER</div>
+    <div id="clock">01:30</div>
+    <div class="timer-controls">
+      <button onclick="setTimer(60)">60 sec</button>
+      <button onclick="setTimer(90)">90 sec</button>
+      <button onclick="setTimer(120)">2 min</button>
+      <button class="primary" onclick="toggleTimer()" id="timerButton">Start</button>
+      <button onclick="resetTimer()">Reset</button>
+    </div>
+  </section>
+
+  <h2 id="dayTitle">Push Day</h2>
+  <div id="progress"></div>
+  <section id="workout"></section>
+  <footer>Your workout data is saved on this device.</footer>
+</main>
+
+<script>
+const workouts = {
+  push: {
+    title: "Push Day",
+    exercises: [
+      ["Incline Dumbbell Press", "Chest", "3", "8–12"],
+      ["Shoulder Press", "Shoulders", "3", "8–12"],
+      ["Cable Chest Press", "Chest", "3", "10–12"],
+      ["Dumbbell Lateral Raises", "Side delts", "3", "12–15"],
+      ["Cable Triceps Pushdown", "Triceps", "3", "10–12"],
+      ["Overhead Triceps Extension", "Triceps", "3", "10–12"]
+    ]
+  },
+  pull: {
+    title: "Pull Day",
+    exercises: [
+      ["Seated Cable Row", "Back", "3", "8–12"],
+      ["Single-Arm Dumbbell Row", "Back", "3", "10 each"],
+      ["Dumbbell Reverse Fly", "Rear shoulders", "3", "12–15"],
+      ["Dumbbell Biceps Curl", "Biceps", "3", "10–12"],
+      ["Hammer Curl", "Biceps", "3", "10–12"],
+      ["Cable Face Pull", "Upper back", "3", "12–15"]
+    ]
+  },
+  kettlebell: {
+    title: "Kettlebell Day",
+    exercises: [
+      ["Kettlebell Swing", "Full body", "3", "15"],
+      ["Goblet Squat", "Legs", "3", "12"],
+      ["Kettlebell Deadlift", "Full body", "3", "12"],
+      ["Kettlebell Clean & Press", "Shoulders", "3", "8 each"],
+      ["Kettlebell Russian Twist", "Core", "3", "20"],
+      ["Farmer's Carry", "Grip & core", "3", "30 sec"]
+    ]
+  },
+  core: {
+    title: "Core & Abs",
+    exercises: [
+      ["Plank", "Core", "3", "30–60 sec"],
+      ["Crunches", "Abs", "3", "15"],
+      ["Lying Leg Raises", "Lower abs", "3", "12"],
+      ["Dead Bug", "Core stability", "3", "10 each"],
+      ["Russian Twists", "Obliques", "3", "20"],
+      ["Mountain Climbers", "Core", "3", "30 sec"]
+    ]
+  }
+};
+
+let currentDay = "push";
+let timerSeconds = 90;
+let remaining = 90;
+let timerInterval = null;
+let running = false;
+
+function getSaved() {
+  try {
+    return JSON.parse(localStorage.getItem("workoutsData") || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveData() {
+  localStorage.setItem("workoutsData", JSON.stringify(getSaved()));
+}
+
+function renderDay(day) {
+  currentDay = day;
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.classList.toggle("active", tab.dataset.day === day);
+  });
+
+  document.getElementById("dayTitle").textContent = workouts[day].title;
+  const container = document.getElementById("workout");
+  container.innerHTML = "";
+
+  workouts[day].exercises.forEach((exercise, index) => {
+    const key = day + "-" + index;
+    const saved = getSaved()[key] || {};
+    const isDone = saved.done || false;
+
+    const card = document.createElement("article");
+    card.className = "exercise";
+
+    const title = document.createElement("h3");
+    title.textContent = (index + 1) + ". " + exercise[0];
+
+    const detail = document.createElement("p");
+    detail.textContent = exercise[1] + " · Target reps: " + exercise[3];
+
+    const fields = document.createElement("div");
+    fields.className = "fields";
+
+    const setInput = makeInput("Sets", saved.sets ?? exercise[2], "number");
+    const repInput = makeInput("Reps", saved.reps ?? exercise[3], "text");
+    const weightInput = makeInput("Weight (kg)", saved.weight ?? "", "number");
+    weightInput.inputMode = "decimal";
+    weightInput.placeholder = "0";
+
+    [setInput, repInput, weightInput].forEach(input => {
+      input.addEventListener("change", () => {
+        const data = getSaved();
+        data[key] = {
+          ...data[key],
+          sets: setInput.value,
+          reps: repInput.value,
+          weight: weightInput.value,
+          done: isDone
+        };
+        localStorage.setItem("workoutsData", JSON.stringify(data));
+      });
+    });
+
+    fields.append(setInput.wrapper, repInput.wrapper, weightInput.wrapper);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const demo = document.createElement("a");
+    demo.className = "action demo";
+    demo.textContent = "▶ Watch demo";
+    demo.href = "https://www.youtube.com/results?search_query=" +
+      encodeURIComponent(exercise[0] + " exercise demonstration");
+    demo.target = "_blank";
+    demo.rel = "noopener";
+
+    const done = document.createElement("button");
+    done.className = "done" + (isDone ? " checked" : "");
+    done.textContent = isDone ? "✓ Completed" : "Mark complete";
+    done.onclick = () => {
+      const data = getSaved();
+      data[key] = {
+        ...data[key],
+        sets: setInput.value,
+        reps: repInput.value,
+        weight: weightInput.value,
+        done: !isDone
+      };
+      localStorage.setItem("workoutsData", JSON.stringify(data));
+      renderDay(currentDay);
+    };
+
+    actions.append(demo, done);
+    card.append(title, detail, fields, actions);
+    container.append(card);
+  });
+
+  updateProgress();
+}
+
+function makeInput(labelText, value, type) {
+  const wrapper = document.createElement("div");
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = value;
+  if (type === "number") input.min = "0";
+  wrapper.append(label, input);
+  return { wrapper, input };
+}
+
+function updateProgress() {
+  const data = getSaved();
+  const total = workouts[currentDay].exercises.length;
+  let completed = 0;
+  workouts[currentDay].exercises.forEach((_, i) => {
+    if (data[currentDay + "-" + i]?.done) completed++;
+  });
+  document.getElementById("progress").textContent =
+    completed + " of " + total + " exercises completed";
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => renderDay(tab.dataset.day));
+});
+
+function setTimer(seconds) {
+  stopTimer();
+  timerSeconds = seconds;
+  remaining = seconds;
+  updateClock();
+  document.getElementById("timerButton").textContent = "Start";
+}
+
+function updateClock() {
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  document.getElementById("clock").textContent =
+    String(minutes).padStart(2, "0") + ":" +
+    String(seconds).padStart(2, "0");
+}
+
+function toggleTimer() {
+  if (running) {
+    stopTimer();
+    document.getElementById("timerButton").textContent = "Start";
+    return;
+  }
+
+  if (remaining <= 0) remaining = timerSeconds;
+  running = true;
+  document.getElementById("timerButton").textContent = "Pause";
+
+  timerInterval = setInterval(() => {
+    remaining--;
+    updateClock();
+
+    if (remaining <= 0) {
+      stopTimer();
+      document.getElementById("timerButton").textContent = "Start";
+      document.getElementById("clock").textContent = "00:00";
+      alert("Rest finished! Time for your next set.");
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  running = false;
+}
+
+function resetTimer() {
+  stopTimer();
+  remaining = timerSeconds;
+  updateClock();
+  document.getElementById("timerButton").textContent = "Start";
+}
+
+renderDay("push");
+</script>
+</body>
+</html>
